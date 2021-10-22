@@ -46,3 +46,15 @@ func TestInsetionSort(t *testing.T) {
     t.Errorf("sort failed. expected: %+v. actual: %+v", ascSorted, s)
   }
 }
+
+func TestShellSort(t *testing.T) {
+  t.Log("test case 1: asc")
+  if s := shellSort(arr); !reflect.DeepEqual(s, ascSorted) {
+    t.Errorf("sort failed. expected: %+v. actual: %+v", ascSorted, s)
+  }
+
+  t.Log("test case 2: empty")
+  if s := shellSort(empty); !reflect.DeepEqual(s, empty) {
+    t.Errorf("sort failed. expected: %+v. actual: %+v", ascSorted, s)
+  }
+}
