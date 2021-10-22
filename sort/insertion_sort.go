@@ -27,21 +27,26 @@ package sort
 //}
 
 func insertionSort(data []int) []int {
+	if len(data) == 0 {
+		return data
+	}
 	// i is the last index of sorted part
-	for i := 0; i < len(data)-2; i++ {
+	for i := 0; i < len(data)-1; i++ {
 		current := data[i+1]
 		// 1. if the last sorted item is bigger than the current item: the current item
 		//    should be placed somewhere in the sorted part.
 		// 2. else: just see it as already sorted and increment i
 		if data[i] > current {
 			// see where the current item should be placed from right to left
-			for j := i; j > 0; j-- {
+			for j := 0; j < i+1; j++ {
 				// if an item which is smaller than or equal to the current found, then the current
 				// should be right next to that item. so insert the current there and shift items right by one
-				if data[j] <= current {
-					for k := j; k < i; k-- {
-						data[k+1] = data[k]
+				if data[j] >= current {
+					for k := i+1; k > j; k-- {
+						data[k] = data[k-1]
 					}
+          data[j] = current
+          break
 				}
 			}
 		}
@@ -61,23 +66,23 @@ func shellSort(data []int) []int {
 		return h
 	})(len(data))
 
-	for h < 1{
+	for h > 1 {
 		for i := 0; i < h; i++ {
 			d := []int{}
-      // make a slice by getting values from data with the interval of h
+			// make a slice by getting values from data with the interval of h
 			for j := 0; i+h*j < len(data); j++ {
 				d = append(d, data[i+h*j])
 			}
 
-      // store values back to data at original positions
+			// store values back to data at original positions
 			for j, v := range insertionSort(d) {
 				data[i+h*j] = v
 			}
 		}
 
-    // re-calculate h
+		// re-calculate h
 		h = (h - 1) / 3
 	}
 
-	return data
+	return insertionSort(data)
 }
