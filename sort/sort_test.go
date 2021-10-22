@@ -58,3 +58,19 @@ func TestShellSort(t *testing.T) {
     t.Errorf("sort failed. expected: %+v. actual: %+v", ascSorted, s)
   }
 }
+
+func TestMergeSort(t *testing.T) {
+  data := []int{1}
+  t.Logf("f: %+v. s: %+v \n", data[:len(data)/2], data[len(data)/2:])
+
+
+  t.Log("test case 1: asc")
+  if s := mergeSort(arr); !reflect.DeepEqual(s, ascSorted) {
+    t.Errorf("sort failed. expected: %+v. actual: %+v", ascSorted, s)
+  }
+
+  t.Log("test case 2: empty")
+  if s := mergeSort(empty); !reflect.DeepEqual(s, empty) {
+    t.Errorf("sort failed. expected: %+v. actual: %+v", ascSorted, s)
+  }
+}
