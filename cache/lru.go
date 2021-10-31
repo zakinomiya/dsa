@@ -1,21 +1,18 @@
 package cache
 
 import (
+	"errors"
 	"time"
 )
 
 type Cache interface {
 	Get(key int) *Data
 	Put(key int, value interface{}) *Data
-	Cap() int
-	Size() int
 }
 
 type Data struct {
 	data interface{}
 	time time.Time
-  next *Data
-  key int
 }
 
 func NewData(key int, data interface{}) *Data {
@@ -33,11 +30,15 @@ type LRUCache struct {
 	cap  int
 }
 
-func NewLRUCache(cap int) *LRUCache {
+func NewLRUCache(cap int) (*LRUCache, error) {
+  if cap < 1 {
+    return nil, errors.New("cap must be greater than 0")
+  }
+
 	return &LRUCache{
 		data: make(map[int]*Data, cap),
 		cap:  cap,
-	}
+	}, nil
 }
 
 func (lru *LRUCache) isFull() bool {
@@ -64,9 +65,9 @@ func (lru *LRUCache) removeLRU() *Data {
 		}
 	}
 
-  d := lru.data[key]
-  delete (lru.data, key)
-  return d
+	d := lru.data[key]
+	delete(lru.data, key)
+	return d
 }
 
 func (lru *LRUCache) updateUsedTime(key int) {
@@ -91,39 +92,96 @@ func (lru *LRUCache) Get(key int) *Data {
 // LRUCache2 implements least recently used cache but improved put time of O(1)
 // ============================================
 type LRUCache2 struct {
-	data map[int]*Data
+	data map[int]*DoubleLinkedData
 	cap  int
 
-  head *Data
-  tail *Data
+	head *DoubleLinkedData
+	tail *DoubleLinkedData
 }
 
-func NewLRUCache2(cap int) *LRUCache2 {
-	return &LRUCache2{
-		data: make(map[int]*Data, cap),
-		cap:  cap,
+type DoubleLinkedData struct {
+	data interface{}
+	time time.Time
+
+	next *DoubleLinkedData
+	prev *DoubleLinkedData
+	key  int
+}
+
+func NewDoubleLinkedData(key int, value interface{}, next *DoubleLinkedData, prev *DoubleLinkedData) *DoubleLinkedData {
+  d := &DoubleLinkedData{
+		data: value,
+		time: time.Now(),
+		next: next,
+		prev: prev,
+		key:  key,
 	}
-}
 
-func (lru *LRUCache2) Get(key int) *Data {
-  p := lru.data[key]
-  p.time = time.Now()
-  return p
-}
-
-func (lru *LRUCache2) Put(key int, value interface{}) *Data {
-  d := NewData(key, value)
-  lru.head.next = d
-  lru.head = d
-  lru.data[key] = d
-
-  if len(lru.data) > lru.cap {
-    t := lru.tail
-    lru.tail = lru.tail.next
-    delete (lru.data, t.key)
-    return t
+  if prev != nil {
+    prev.next = d
   }
 
-  return nil
+  if next != nil {
+    next.prev = d
+  }
+
+  return d
 }
 
+func NewLRUCache2(cap int) (*LRUCache2, error) {
+  if cap < 1 {
+    return nil, errors.New("cap must be greater than 0")
+  }
+
+	return &LRUCache2{
+		data: make(map[int]*DoubleLinkedData, cap),
+		cap:  cap,
+	}, nil
+}
+
+func (lru *LRUCache2) Get(key int) *DoubleLinkedData {
+	d := lru.data[key]
+  if d == nil {
+    return nil 
+  }
+
+	d.time = time.Now()
+  if len(lru.data) == 1 {
+    return d
+  }
+
+  if lru.tail == d && d.next != nil {
+    lru.tail = d.next
+  }
+
+  if d.next != nil {
+    d.next.prev = d.prev
+  }
+  if d.prev != nil {
+    d.prev.next = d.next
+  } 
+
+  d.next = nil
+  lru.head = d
+	return d
+}
+
+func (lru *LRUCache2) Put(key int, value interface{}) *DoubleLinkedData {
+	d := NewDoubleLinkedData(key, value, nil, lru.head)
+	lru.head = d
+  if lru.tail == nil {
+    lru.tail = d
+  }
+
+	lru.data[key] = d
+	if len(lru.data) > lru.cap {
+		t := lru.tail
+		lru.tail = lru.tail.next
+    t.next = nil
+    t.prev = nil
+		delete(lru.data, t.key)
+		return t
+	}
+
+	return nil
+}
