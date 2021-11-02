@@ -1,0 +1,19 @@
+
+
+
+# https://leetcode.com/problems/search-insert-position/
+class SearchInsert:
+    def searchInsert(self, nums: list[int], target: int) -> int:
+        med = len(nums) // 2
+
+        if nums[med] == target:
+            return target
+        elif nums[med] > target:
+            # search left
+            pass
+        else:
+            # search right
+            pass
+
+
+        
