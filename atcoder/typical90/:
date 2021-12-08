@@ -1,0 +1,26 @@
+def solve(A: list[int], m: int, k: int) -> bool:
+    l = 0
+    cnt = 0
+    for i in range(len(A)):
+        if A[i] - A[l] >= m:
+            l = i
+            cnt += 1
+
+    return cnt >= k
+
+
+
+def q1():
+    N, L = [int(n) for n in input().split()]
+    K = int(input())
+    A = [int(n) for n in input().split()]
+
+    left, right = 0, L
+    while right - left > 1:
+        mid = (right - left) // 2 + left
+        if solve(A, mid, K)
+
+
+
+if __name__ == "__main__":
+    print(q1())
