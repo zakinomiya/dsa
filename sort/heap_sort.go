@@ -1,5 +1,7 @@
 package sort
 
+import "os"
+
 func toHeap(data []int, lo int, hi int) []int {
 	if len(data) == 0 {
 		return data
