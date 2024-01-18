@@ -1,84 +1,105 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from typing_extensions import Self
 
 @dataclass
 class Node:
-    next: Self | None
-    prev: Self | None
-    key: int
+    next: Self = field(init=False)
+    prev: Self = field(init=False)
+    key: int 
+
+    def __post_init__(self):
+        self.next = self
+        self.prev = self
+
+    @staticmethod
+    def nil_node(): 
+        n = Node(key=-1) 
+        n.next = n
+        n.prev = n
+        return n
+
+    @staticmethod
+    def new_node(next, prev, key: int):
+        n = Node(key=key)
+        n.next = next
+        n.prev = prev
+        return n
+
+    def is_nil(self) -> bool:
+        return self.key == -1
 
 @dataclass
 class List: 
-    head: Node | None = None
-    tail: Node | None = None
+    sentinel: Node
+
+    def head(self) -> Node | None:
+        return self.sentinel.next
+
+    def tail(self) -> Node | None:
+        return self.sentinel.prev
+
+    @staticmethod
+    def new_list():
+        nil = Node.nil_node()
+        return List(sentinel=nil)
+
+    def search(self, key: int):
+        cur = self.sentinel.next
+        while cur.is_nil() == False and cur.key != key :
+            cur = cur.next
+
+        return None if cur.is_nil() else cur
+
 
     def insert(self, key: int):
-        n = Node(key=key, prev=None, next=None)
-        if self.head is None:
-            self.head = n
-            self.tail = n
+        if self.sentinel.next.is_nil():
+            n = Node.new_node(next=self.sentinel, prev=self.sentinel, key=key)
+            self.sentinel.next = n
+            self.sentinel.prev = n
         else: 
-            n.prev = self.head
-            self.head.next = n
-            self.head = n
+            n = Node.new_node(next=self.sentinel.next, prev=self.sentinel, key=key)
+            self.sentinel.next.prev = n
+            self.sentinel.next = n
 
     def delete(self, key: int):
-        if self.head is None:
-            return None
+        n = self.search(key)
+        if n is None:
+            return 
 
-        if self.head.key == key:
-            self.deleteFirst()
-            return
-
-        current = self.head
-        while current.prev is not None and current.key != key:
-            current = current.prev
-
-        if current.prev is not None:
-            current.prev.next = current.next
-
-        if current.next is not None:
-            current.next.prev = current.prev
+        n.prev.next = n.next
+        n.next.prev = n.prev
 
     def deleteFirst(self):
-        if self.head is None:
-            return 
-
-        if self.head.prev is not None:
-            self.head.prev.next = None
-            self.head = self.head.prev
-        else:
-            self.head = None
-            self.tail = None
+        first = self.sentinel.next
+        if first.is_nil() == False:
+            first.next.prev = self.sentinel
+            self.sentinel.next = first.next
 
     def deleteLast(self):
-        if self.tail is None:
-            return 
-
-        if self.tail.next is not None:
-            self.tail.next.prev = None
-            self.tail = self.tail.next
-        else:
-            self.head = None
-            self.tail = None
+        last = self.sentinel.prev
+        if last.is_nil() == False:
+            self.sentinel.prev = last.prev
+            last.prev.next = self.sentinel
 
 def print_items(l: List):
     print("items:")
-    h = l.head
-    while h is not None:
+    h = l.sentinel.next
+    while h.is_nil() == False:
         print(h.key)
-        h = h.prev
+        h = h.next
 
 def main():
-    l = List()
+    l = List.new_list()
 
     l.insert(5)
     l.insert(2)
     l.insert(3)
     l.insert(1)
-    l.delete(3)
     l.insert(6)
+    l.delete(3)
+    l.delete(2)
+    print_items(l)
     l.deleteLast()
     l.deleteLast()
     l.deleteLast()
